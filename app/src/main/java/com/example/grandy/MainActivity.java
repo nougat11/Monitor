@@ -14,6 +14,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -45,6 +46,9 @@ import android.widget.Toast;
 
 import java.text.BreakIterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executor;
 
 import android.telephony.AvailableNetworkInfo;
 
@@ -64,12 +68,40 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.toolbar);
 
 
-
-
         Context context = getApplicationContext();
         CharSequence text = "Hello toast!";
         int duration = Toast.LENGTH_SHORT;
         TelephonyManager tpf = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            celll(tpf, context, duration);
+        }
+        Timer timer = new Timer();
+        UpdateExecutor executor = new UpdateExecutor();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                tpf.requestCellInfoUpdate(executor, new TelephonyManager.CellInfoCallback() {
+                    @Override
+                    public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
+                        celll(tpf, context, duration);
+                    }
+                });
+            }
+        }, 1000, 1000);
+
+    }
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    public void celll(TelephonyManager tpf, Context context, int duration){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -86,28 +118,31 @@ public class MainActivity extends AppCompatActivity {
             CellInfo cell = cls.get(i);
             if (cell instanceof CellInfoLte) {
 
-                CellIdentityLte info = (CellIdentityLte) cell.getCellIdentity();
+                CellIdentityLte info = null;
+
+                    info = (CellIdentityLte) cell.getCellIdentity();
+
                 int ci = info.getCi();
                 if (ci != 2147483647) {
-                int cid = ci / 256;
+                    int cid = ci / 256;
 
-                TextView cid_text_view = (TextView)findViewById(R.id.cid_text);
-                cid_text_view.setText("CID:"+cid);
-                int sector = ci % 256;
-                TextView sector_text_view = (TextView)findViewById(R.id.sector_text);
-                sector_text_view.setText("Sector:"+sector);
-                int eafrcn = info.getEarfcn();
-                TextView eafrcn_text_view = (TextView)findViewById(R.id.eafrcn_text);
-                eafrcn_text_view.setText("Earfcn:"+eafrcn);
-                int pci = info.getPci();
-                TextView pci_text_view = (TextView)findViewById(R.id.pci_text);
-                pci_text_view.setText("PCI:"+pci);
-                int tac = info.getTac();
-                TextView tac_text_view = (TextView)findViewById(R.id.lac_text);
-                tac_text_view.setText("TAC:"+tac);
-                int mnc = info.getMnc();
-                TextView mnc_text_view = (TextView)findViewById(R.id.mnc_text);
-                mnc_text_view.setText("MNC:"+mnc);
+                    TextView cid_text_view = (TextView)findViewById(R.id.cid_text);
+                    cid_text_view.setText("CID:"+cid);
+                    int sector = ci % 256;
+                    TextView sector_text_view = (TextView)findViewById(R.id.sector_text);
+                    sector_text_view.setText("Sector:"+sector);
+                    int eafrcn = info.getEarfcn();
+                    TextView eafrcn_text_view = (TextView)findViewById(R.id.eafrcn_text);
+                    eafrcn_text_view.setText("Earfcn:"+eafrcn);
+                    int pci = info.getPci();
+                    TextView pci_text_view = (TextView)findViewById(R.id.pci_text);
+                    pci_text_view.setText("PCI:"+pci);
+                    int tac = info.getTac();
+                    TextView tac_text_view = (TextView)findViewById(R.id.lac_text);
+                    tac_text_view.setText("TAC:"+tac);
+                    int mnc = info.getMnc();
+                    TextView mnc_text_view = (TextView)findViewById(R.id.mnc_text);
+                    mnc_text_view.setText("MNC:"+mnc);
 
                     String message = "CID:" + cid + "\n" + "Sector:" + sector + "\n" + "EAfrCN:" + eafrcn + "\n" + "PCI:" + pci + "\n" + "MNC" + mnc + "\n" + "TAC" + tac + "\n";
                     Toast toast = Toast.makeText(context, message, duration);
@@ -121,28 +156,28 @@ public class MainActivity extends AppCompatActivity {
                 int rnc = ci / 65536;
                 ci -= 65536 * rnc;
                 if (ci != 65535) {
-                TextView rnc_text_view = (TextView)findViewById(R.id.rnc_text);
-                rnc_text_view.setText("RNC:"+rnc);
+                    TextView rnc_text_view = (TextView)findViewById(R.id.rnc_text);
+                    rnc_text_view.setText("RNC:"+rnc);
 
 
-                int cid = ci / 10;
-                TextView cid_text_view = (TextView)findViewById(R.id.cid_text);
-                cid_text_view.setText("CID:"+cid);
-                int sector = ci % 10;
-                TextView sector_text_view = (TextView)findViewById(R.id.sector_text);
-                sector_text_view.setText("Sector:"+sector);
-                int psc = info.getPsc();
-                TextView pci_text_view = (TextView)findViewById(R.id.pci_text);
-                pci_text_view.setText("PSC:"+psc);
-                int mnc = info.getMnc();
-                TextView mnc_text_view = (TextView)findViewById(R.id.mnc_text);
-                mnc_text_view.setText("MNC:"+mnc);
-                int lac = info.getLac();
-                TextView tac_text_view = (TextView)findViewById(R.id.lac_text);
-                tac_text_view.setText("LAC:"+lac);
-                int uarfcn = info.getUarfcn();
-                TextView eafrcn_text_view = (TextView)findViewById(R.id.eafrcn_text);
-                eafrcn_text_view.setText("Uarfcn:"+uarfcn);
+                    int cid = ci / 10;
+                    TextView cid_text_view = (TextView)findViewById(R.id.cid_text);
+                    cid_text_view.setText("CID:"+cid);
+                    int sector = ci % 10;
+                    TextView sector_text_view = (TextView)findViewById(R.id.sector_text);
+                    sector_text_view.setText("Sector:"+sector);
+                    int psc = info.getPsc();
+                    TextView pci_text_view = (TextView)findViewById(R.id.pci_text);
+                    pci_text_view.setText("PSC:"+psc);
+                    int mnc = info.getMnc();
+                    TextView mnc_text_view = (TextView)findViewById(R.id.mnc_text);
+                    mnc_text_view.setText("MNC:"+mnc);
+                    int lac = info.getLac();
+                    TextView tac_text_view = (TextView)findViewById(R.id.lac_text);
+                    tac_text_view.setText("LAC:"+lac);
+                    int uarfcn = info.getUarfcn();
+                    TextView eafrcn_text_view = (TextView)findViewById(R.id.eafrcn_text);
+                    eafrcn_text_view.setText("Uarfcn:"+uarfcn);
 
                     String message = "CID:" + cid + "\n" + "Sector:" + sector + "\n" + "uarfcn:" + uarfcn + "\n" + "Psc:" + psc + "\n" + "MNC" + mnc + "\n" + "LAC:" + lac +"\n";
                     Toast toast = Toast.makeText(context, message, duration);
@@ -177,11 +212,11 @@ public class MainActivity extends AppCompatActivity {
                     toast.show();
                 }
             }
-            CellInfo qq = cls.get(0);
+            //CellInfo qq = cls.get(0);
 
 
-            Toast toast = Toast.makeText(context, qq.toString(), duration);
-            toast.show();
+            //Toast toast = Toast.makeText(context, qq.toString(), duration);
+            //toast.show();
 
 
         }
